@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Shatkona - Sacred Indian Geometry</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #0f0528 0%, #1a093d 40%, #2a0c60 100%);
+            color: #ffcc00;
+        }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .overlay {
+            position: absolute;
+            width: 100%;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+            padding-bottom: 30px;
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
+            color: #ffcc00;
+            text-align: center;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+            font-family: 'Cambria', 'Times New Roman', serif;
+            letter-spacing: 1px;
+        }
+        
+        .title:hover {
+            opacity: 1;
+            text-shadow: 0 0 20px rgba(255, 204, 0, 1);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+            color: #ffdd77;
+            text-align: center;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+            font-style: italic;
+        }
+        
+        .subtitle:hover {
+            opacity: 1;
+        }
+        
+        .controls {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 0 25px rgba(255, 204, 0, 0.3);
+            border: 1px solid rgba(255, 204, 0, 0.2);
+            pointer-events: all;
+            margin-top: 15px;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        
+        .controls:hover {
+            opacity: 1;
+        }
+        
+        .control-btn {
+            background: linear-gradient(145deg, #ffcc00, #ffaa00);
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            color: #330033;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 12px rgba(255, 204, 0, 0.5);
+            opacity: 0.9;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .control-btn:before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%);
+            opacity: 0;
+            transform: rotate(45deg);
+            transition: opacity 0.3s;
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.9);
+            opacity: 1;
+        }
+        
+        .control-btn:hover:before {
+            opacity: 0.3;
+            animation: shine 1.5s ease-out infinite;
+        }
+        
+        .hint {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #ffcc00;
+            border-radius: 15px;
+            font-size: 12px;
+            pointer-events: none;
+            text-align: center;
+            opacity: 0.7;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 204, 0, 0.1);
+        }
+        
+        .decoration {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255, 204, 0, 0.08) 0%, transparent 15%),
+                radial-gradient(circle at 80% 70%, rgba(255, 153, 0, 0.08) 0%, transparent 20%),
+                radial-gradient(circle at 40% 80%, rgba(255, 221, 0, 0.08) 0%, transparent 18%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffcc00;
+            font-size: 24px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+        }
+        
+        .toggle-ui {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #ffcc00;
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            border-radius: 25px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 20;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .toggle-ui:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.7);
+        }
+        
+        .floating-symbols {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .symbol {
+            position: absolute;
+            font-size: 24px;
+            color: rgba(255, 204, 0, 0.3);
+            animation: float 15s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+            }
+        }
+        
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+        
+        .mandala-pattern {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-image: 
+                radial-gradient(circle, rgba(255, 204, 0, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: rotate 120s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="canvas"></div>
+        <div class="decoration"></div>
+        <div class="mandala-pattern"></div>
+        <div class="floating-symbols" id="floatingSymbols"></div>
+        <div class="overlay">
+            <h1 class="title">स्वर्ण षट्कोण</h1>
+            <h2 class="subtitle">Golden Shatkona - Sacred Geometry of India</h2>
+            <div class="controls">
+                <button class="control-btn" id="rotateBtn" title="Toggle Rotation">⟳</button>
+                <button class="control-btn" id="alignBtn" title="Align View">A</button>
+                <button class="control-btn" id="glowBtn" title="Toggle Glow">G</button>
+                <button class="control-btn" id="resetBtn" title="Reset View">R</button>
+                <button class="control-btn" id="themeBtn" title="Change Theme">T</button>
+            </div>
+        </div>
+        <div class="hint">Drag to rotate view • Scroll to zoom • Click buttons for actions</div>
+        <div class="loading" id="loading">Awakening Divine Energy...</div>
+        <button class="toggle-ui" id="toggleUi">Toggle UI</button>
+    </div>
+
+    <script>
+        // Main Three.js code
+        let scene, camera, renderer, controls;
+        let shatkona, upTriangle, downTriangle;
+        let particles;
+        let isRotating = true;
+        let glowIntensity = 1.0;
+        let uiVisible = true;
+        let currentTheme = 'gold';
+        
+        // Initialize the scene
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 10;
+            camera.position.y = 5;
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas').appendChild(renderer.domElement);
+            
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.rotateSpeed = 0.8;
+            
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0xffcc88, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffdd99, 1.2);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+            
+            const pointLight = new THREE.PointLight(0xffaa00, 1.5, 100);
+            pointLight.position.set(0, 0, 5);
+            scene.add(pointLight);
+            
+            // Add additional lights for metallic effect
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            backLight.position.set(-5, -5, -5);
+            scene.add(backLight);
+            
+            // Create golden shatkona
+            createShatkona();
+            
+            // Create particle system
+            createParticles();
+            
+            // Create decorative elements
+            createDecorations();
+            
+            // Create floating symbols
+            createFloatingSymbols();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Remove loading text
+            document.getElementById('loading').style.display = 'none';
+            
+            // Start animation
+            animate();
+        }
+        
+        function createShatkona() {
+            // Create group to hold both triangles
+            shatkona = new THREE.Group();
+            
+            // Create upward pointing triangle with metallic edges
+            const upGeometry = new THREE.ConeGeometry(3, 1.8, 3);
+            upGeometry.rotateZ(Math.PI);
+            
+            // Create metallic edges for the triangle
+            const upEdgeGeometry = new THREE.EdgesGeometry(upGeometry);
+            const upEdges = new THREE.LineSegments(
+                upEdgeGeometry,
+                new THREE.LineBasicMaterial({ 
+                    color: 0xffeeaa, 
+                    linewidth: 3,
+                    emissive: 0xbbaa66,
+                    emissiveIntensity: 0.7
+                })
+            );
+            
+            const upMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffcc00,
+                shininess: 120,
+                emissive: 0x884400,
+                emissiveIntensity: glowIntensity,
+                specular: 0xffdd99
+            });
+            
+            upTriangle = new THREE.Mesh(upGeometry, upMaterial);
+            upTriangle.position.y = 0.2;
+            upTriangle.rotation.x = Math.PI;
+            
+            // Add edges to the triangle
+            upTriangle.add(upEdges);
+            
+            // Create downward pointing triangle with metallic edges
+            const downGeometry = new THREE.ConeGeometry(3, 1.8, 3);
+            
+            // Create metallic edges for the triangle
+            const downEdgeGeometry = new THREE.EdgesGeometry(downGeometry);
+            const downEdges = new THREE.LineSegments(
+                downEdgeGeometry,
+                new THREE.LineBasicMaterial({ 
+                    color: 0xffeeaa, 
+                    linewidth: 3,
+                    emissive: 0xbbaa66,
+                    emissiveIntensity: 0.7
+                })
+            );
+            
+            const downMaterial = new THREE.MeshPhongMaterial({
+                color: 0xcc9900,
+                shininess: 120,
+                emissive: 0x553300,
+                emissiveIntensity: glowIntensity,
+                specular: 0xffdd99
+            });
+            
+            downTriangle = new THREE.Mesh(downGeometry, downMaterial);
+            downTriangle.position.y = -0.2;
+            
+            // Add edges to the triangle
+            downTriangle.add(downEdges);
+            
+            // Add metallic connectors at the vertices
+            createMetallicConnectors();
+            
+            // Add intricate patterns to triangles
+            addIndianPatterns();
+            
+            // Add both triangles to the group
+            shatkona.add(upTriangle);
+            shatkona.add(downTriangle);
+            
+            // Position the entire shatkona
+            shatkona.position.y = 0;
+            
+            // Add to scene
+            scene.add(shatkona);
+        }
+        
+        function createMetallicConnectors() {
+            // Create metallic spheres at the vertices for enhanced metallic look
+            const metalMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffee99,
+                shininess: 150,
+                specular: 0xffffff,
+                emissive: 0x554411,
+                emissiveIntensity: 0.5
+            });
+            
+            // Create 3 connectors for the vertices
+            for (let i = 0; i < 3; i++) {
+                const connector = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.25, 32, 32),
+                    metalMaterial
+                );
+                
+                // Position the connectors at the vertices
+                const angle = (i / 3) * Math.PI * 2;
+                const radius = 2.8;
+                connector.position.set(
+                    Math.cos(angle) * radius,
+                    0,
+                    Math.sin(angle) * radius
+                );
+                
+                shatkona.add(connector);
+            }
+            
+            // Create central metallic core
+            const core = new THREE.Mesh(
+                new THREE.SphereGeometry(0.5, 32, 32),
+                metalMaterial
+            );
+            core.position.y = 0;
+            shatkona.add(core);
+            
+            // Add decorative rings around the core
+            for (let i = 1; i <= 3; i++) {
+                const ringGeometry = new THREE.TorusGeometry(0.3 * i, 0.05, 16, 100);
+                const ringMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xffcc00, 
+                    transparent: true, 
+                    opacity: 0.7 
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = Math.PI / 2;
+                shatkona.add(ring);
+            }
+        }
+        
+        function addIndianPatterns() {
+            // Add intricate Indian patterns to the triangles
+            const patternGeometry = new THREE.TorusKnotGeometry(0.5, 0.1, 100, 16);
+            const patternMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
+                transparent: true,
+                opacity: 0.4
+            });
+            
+            for (let i = 0; i < 6; i++) {
+                const pattern = new THREE.Mesh(patternGeometry, patternMaterial);
+                pattern.position.y = i % 2 === 0 ? 0.1 : -0.1;
+                pattern.rotation.x = Math.PI / 2;
+                pattern.rotation.y = (i * Math.PI) / 3;
+                pattern.scale.set(0.8, 0.8, 0.8);
+                shatkona.add(pattern);
+            }
+        }
+        
+        function createParticles() {
+            const particleCount = 800;
+            const particlesGeometry = new THREE.BufferGeometry();
+            const posArray = new Float32Array(particleCount * 3);
+            const colorArray = new Float32Array(particleCount * 3);
+            
+            // Create particle positions and colors
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                // Random positions in a sphere
+                const radius = 10 + Math.random() * 15;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                
+                posArray[i] = radius * Math.sin(phi) * Math.cos(theta);
+                posArray[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                posArray[i + 2] = radius * Math.cos(phi);
+                
+                // Gold/yellow colors
+                colorArray[i] = 1.0; // R
+                colorArray[i + 1] = Math.random() * 0.5 + 0.5; // G
+                colorArray[i + 2] = 0.0; // B
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.15,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                sizeAttenuation: true
+            });
+            
+            particles = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particles);
+        }
+        
+        function createDecorations() {
+            // Add decorative rings
+            const ringGeometry = new THREE.RingGeometry(5, 6, 64);
+            const ringMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.15
+            });
+            
+            for (let i = 0; i < 5; i++) {
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = Math.PI / 2;
+                ring.position.y = i * 0.5 - 1;
+                scene.add(ring);
+            }
+            
+            // Add floating symbols (simplified om symbols)
+            const symbolGeometry = new THREE.TorusGeometry(0.5, 0.1, 16, 100);
+            const symbolMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffcc00,
+                transparent: true,
+                opacity: 0.4
+            });
+            
+            for (let i = 0; i < 16; i++) {
+                const angle = (i / 16) * Math.PI * 2;
+                const radius = 10;
+                
+                const symbol = new THREE.Mesh(symbolGeometry, symbolMaterial);
+                symbol.position.set(
+                    Math.cos(angle) * radius,
+                    Math.sin(angle) * 0.5,
+                    Math.sin(angle) * radius
+                );
+                scene.add(symbol);
+            }
+            
+            // Add decorative pillars
+            const pillarGeometry = new THREE.CylinderGeometry(0.2, 0.2, 5, 32);
+            const pillarMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffcc00,
+                shininess: 100,
+                emissive: 0x553300,
+                emissiveIntensity: 0.3
+            });
+            
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 8;
+                
+                const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+                pillar.position.set(
+                    Math.cos(angle) * radius,
+                    0,
+                    Math.sin(angle) * radius
+                );
+                pillar.rotation.x = Math.PI / 2;
+                scene.add(pillar);
+            }
+        }
+        
+        function createFloatingSymbols() {
+            const symbolsContainer = document.getElementById('floatingSymbols');
+            const indianSymbols = ['ॐ', '卍', '🕉', '☸', '✸', '꧁', '꧂'];
+            
+            for (let i = 0; i < 20; i++) {
+                const symbol = document.createElement('div');
+                symbol.className = 'symbol';
+                symbol.textContent = indianSymbols[Math.floor(Math.random() * indianSymbols.length)];
+                symbol.style.left = `${Math.random() * 100}%`;
+                symbol.style.top = `${Math.random() * 100}%`;
+                symbol.style.animationDelay = `${Math.random() * 5}s`;
+                symbolsContainer.appendChild(symbol);
+            }
+        }
+        
+        function changeTheme() {
+            if (currentTheme === 'gold') {
+                // Change to silver theme
+                upTriangle.material.color.set(0xdddddd);
+                upTriangle.material.emissive.set(0x444444);
+                downTriangle.material.color.set(0xaaaaaa);
+                downTriangle.material.emissive.set(0x333333);
+                currentTheme = 'silver';
+                
+                // Update UI colors
+                document.body.style.background = 'linear-gradient(to bottom, #1a1a2e 0%, #16213e 40%, #0f3460 100%)';
+                document.querySelector('.title').style.color = '#ffffff';
+                document.querySelector('.subtitle').style.color = '#dddddd';
+            } else if (currentTheme === 'silver') {
+                // Change to saffron theme
+                upTriangle.material.color.set(0xff9933);
+                upTriangle.material.emissive.set(0x884400);
+                downTriangle.material.color.set(0x138808);
+                downTriangle.material.emissive.set(0x004400);
+                currentTheme = 'saffron';
+                
+                // Update UI colors
+                document.body.style.background = 'linear-gradient(to bottom, #ff9933 0%, #ffffff 50%, #138808 100%)';
+                document.querySelector('.title').style.color = '#ff9933';
+                document.querySelector('.subtitle').style.color = '#138808';
+            } else {
+                // Change back to gold theme
+                upTriangle.material.color.set(0xffcc00);
+                upTriangle.material.emissive.set(0x884400);
+                downTriangle.material.color.set(0xcc9900);
+                downTriangle.material.emissive.set(0x553300);
+                currentTheme = 'gold';
+                
+                // Update UI colors
+                document.body.style.background = 'linear-gradient(to bottom, #0f0528 0%, #1a093d 40%, #2a0c60 100%)';
+                document.querySelector('.title').style.color = '#ffcc00';
+                document.querySelector('.subtitle').style.color = '#ffdd77';
+            }
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate the shatkona if enabled
+            if (isRotating) {
+                shatkona.rotation.y += 0.01;
+                shatkona.rotation.x += 0.005;
+            }
+            
+            // Rotate particles
+            particles.rotation.y += 0.001;
+            particles.rotation.x += 0.0005;
+            
+            // Update controls
+            controls.update();
+            
+            // Render the scene
+            renderer.render(scene, camera);
+        }
+        
+        // Toggle UI visibility
+        function toggleUI() {
+            uiVisible = !uiVisible;
+            const overlay = document.querySelector('.overlay');
+            const hint = document.querySelector('.hint');
+            
+            if (uiVisible) {
+                overlay.style.opacity = 1;
+                hint.style.opacity = 0.7;
+                document.getElementById('toggleUi').textContent = 'Hide UI';
+            } else {
+                overlay.style.opacity = 0;
+                hint.style.opacity = 0;
+                document.getElementById('toggleUi').textContent = 'Show UI';
+            }
+        }
+        
+        // Initialize the application when the window loads
+        window.addEventListener('load', init);
+        
+        // Add button functionality
+        document.getElementById('rotateBtn').addEventListener('click', function() {
+            isRotating = !isRotating;
+            this.style.background = isRotating ? 
+                'linear-gradient(145deg, #ffcc00, #ffaa00)' : 
+                'linear-gradient(145deg, #777, #555)';
+        });
+        
+        document.getElementById('alignBtn').addEventListener('click', function() {
+            shatkona.rotation.x = 0;
+            shatkona.rotation.y = 0;
+            shatkona.rotation.z = 0;
+        });
+        
+        document.getElementById('glowBtn').addEventListener('click', function() {
+            glowIntensity = glowIntensity > 0 ? 0 : 0.7;
+            upTriangle.material.emissiveIntensity = glowIntensity;
+            downTriangle.material.emissiveIntensity = glowIntensity;
+            
+            this.style.background = glowIntensity > 0 ? 
+                'linear-gradient(145deg, #ffcc00, #ffaa00)' : 
+                'linear-gradient(145deg, #777, #555)';
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            controls.reset();
+        });
+        
+        document.getElementById('themeBtn').addEventListener('click', changeTheme);
+        
+        // Add toggle UI functionality
+        document.getElementById('toggleUi').addEventListener('click', toggleUI);
+    </script>
+</body>
+</html>
