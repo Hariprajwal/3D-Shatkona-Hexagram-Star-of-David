@@ -6,4 +6,8 @@ The 3D Shatkona (षट्कोण) is an interactive visualization of the anci
 
 
 
+https://github.com/user-attachments/assets/413fb18b-511a-466e-b675-bb70d8a4be74
+
+
+
 <img width="655" height="660" alt="image" src="https://github.com/user-attachments/assets/9018d638-4c06-44d3-ae29-aae1f466f4d5" />
